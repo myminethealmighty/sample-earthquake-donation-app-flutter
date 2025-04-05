@@ -1,6 +1,5 @@
 // widgets/donation_post_card.dart
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/donation_post.dart';
 
 class DonationPostCard extends StatelessWidget {
@@ -17,22 +16,43 @@ class DonationPostCard extends StatelessWidget {
           // Image
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: CachedNetworkImage(
-              imageUrl: post.imageUrl,
+            child: Image.network(
+              post.imageUrl,
               height: 200,
               fit: BoxFit.cover,
-              placeholder:
-                  (context, url) => Container(
-                    color: Colors.grey.shade200,
-                    height: 200,
-                    child: const Center(child: CircularProgressIndicator()),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  color: Colors.grey.shade200,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value:
+                          loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                    ),
                   ),
-              errorWidget:
-                  (context, url, error) => Container(
-                    color: Colors.grey.shade200,
-                    height: 200,
-                    child: const Icon(Icons.error),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey.shade200,
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, color: Colors.red),
+                      SizedBox(height: 8),
+                      Text(
+                        'Failed to load image',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ],
                   ),
+                );
+              },
             ),
           ),
           Padding(
